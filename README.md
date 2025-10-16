@@ -16,12 +16,12 @@ A comprehensive Next.js template that demonstrates Web3Auth integration with Sol
   - Solana mainnet/devnet support
 
 - 🛡️ **Session Management**
-  - JWT-based session handling
+  - Client-side session handling via Web3Auth
   - Persistent sessions across page refreshes
-  - Secure cookie management
+  - Secure authentication state management
 
 - 🚦 **Route Protection**
-  - Middleware-based authentication
+  - Client-side authentication checks
   - Protected routes and components
   - Automatic redirects
 
@@ -81,15 +81,15 @@ npm run dev
 
 ### 3. Configure Authentication Providers
 
-Authentication providers are configured directly in the Web3Auth Dashboard, not through environment variables. The Web3Auth React SDK automatically handles the OAuth flows for supported providers.
+**Important**: Authentication providers are configured directly in the Web3Auth Dashboard, not through environment variables. The Web3Auth Plug and Play modal automatically handles all OAuth flows for supported providers.
 
-#### Supported Providers
-- **Google**: Configure in Web3Auth Dashboard
-- **Twitter**: Configure in Web3Auth Dashboard  
-- **Discord**: Configure in Web3Auth Dashboard
-- **GitHub**: Configure in Web3Auth Dashboard
-- **Email Passwordless**: Configure in Web3Auth Dashboard
-- **SMS**: Configure in Web3Auth Dashboard
+#### Supported Providers (All Configured in Web3Auth Dashboard)
+- **Google**: Enable in Web3Auth Dashboard
+- **Twitter**: Enable in Web3Auth Dashboard  
+- **Discord**: Enable in Web3Auth Dashboard
+- **GitHub**: Enable in Web3Auth Dashboard
+- **Email Passwordless**: Enable in Web3Auth Dashboard
+- **SMS**: Enable in Web3Auth Dashboard
 
 #### Web3Auth Dashboard Setup
 
@@ -97,7 +97,7 @@ Authentication providers are configured directly in the Web3Auth Dashboard, not 
 2. Navigate to your project settings
 3. Go to "Authentication" section
 4. Enable desired social providers
-5. Configure OAuth settings for each provider
+5. **No OAuth client IDs needed** - Web3Auth handles all OAuth flows
 6. Set up custom verifiers if needed
 
 ### 4. Configure Web3Auth Dashboard
@@ -109,11 +109,11 @@ Authentication providers are configured directly in the Web3Auth Dashboard, not 
 
 2. **Authentication Providers**:
    - Enable Google, Twitter, Discord, GitHub
-   - Add the Client IDs and Secrets from above steps
+   - **No OAuth client IDs needed** - Web3Auth handles all OAuth flows internally
 
 3. **Custom Authentication**:
    - Create custom verifiers for advanced use cases
-   - Configure JWT settings
+   - Configure custom authentication flows
    - Set up custom claims
 
 ### 5. Environment Configuration
@@ -121,7 +121,8 @@ Authentication providers are configured directly in the Web3Auth Dashboard, not 
 Update your `.env.local` file:
 
 ```env
-# Web3Auth Configuration
+# Web3Auth Plug and Play Configuration
+# Get your Client ID from: https://dashboard.web3auth.io
 NEXT_PUBLIC_WEB3AUTH_CLIENT_ID=your_web3auth_client_id_here
 NEXT_PUBLIC_WEB3AUTH_NETWORK=testnet
 
@@ -129,9 +130,14 @@ NEXT_PUBLIC_WEB3AUTH_NETWORK=testnet
 NEXT_PUBLIC_SOLANA_NETWORK=devnet
 NEXT_PUBLIC_SOLANA_RPC_URL=https://api.devnet.solana.com
 
-# JWT Configuration (for session management)
-JWT_SECRET=your_jwt_secret_here
-SESSION_DURATION=86400
+# Note: For Plug and Play Web3Auth, all authentication and session management 
+# is handled client-side. No server-side configuration is needed.
+# 
+# Social providers (Google, Twitter, Discord, GitHub) are configured 
+# directly in the Web3Auth Dashboard, not through environment variables.
+# 
+# No JWT secrets or individual OAuth client IDs are needed - Web3Auth 
+# handles all authentication flows internally.
 ```
 
 ## Custom Verifier Setup
@@ -180,9 +186,9 @@ SESSION_DURATION=86400
 ### 1. Environment Variables
 
 - Never commit `.env.local` to version control
-- Use strong, unique JWT secrets
-- Rotate secrets regularly
-- Use different secrets for development and production
+- Use strong, unique Web3Auth Client IDs
+- Rotate Client IDs regularly
+- Use different Client IDs for development and production
 
 ### 2. Domain Whitelisting
 
@@ -196,10 +202,10 @@ NEXT_PUBLIC_WHITELISTED_DOMAINS=http://localhost:3000,http://127.0.0.1:3000
 
 ### 3. Session Security
 
-- Use HTTP-only cookies
-- Set secure flag in production
-- Implement session expiration
-- Use CSRF protection
+- Web3Auth handles all session security internally
+- Sessions are automatically secured and encrypted
+- No additional session management needed
+- Web3Auth provides built-in CSRF protection
 
 ### 4. Private Key Management
 
@@ -265,8 +271,8 @@ const chainConfig = {
 #### 3. Session Not Persisting
 
 **Solution**:
-- Check JWT_SECRET is set correctly
-- Verify cookie settings in production
+- Check Web3Auth Client ID is set correctly
+- Verify Web3Auth Dashboard configuration
 - Ensure HTTPS is enabled in production
 - Check browser cookie settings
 
@@ -317,19 +323,16 @@ const {
 ### Session Management
 
 ```typescript
-// Session API endpoints
-GET /api/auth/session     // Get current session
-POST /api/auth/session    // Create new session
-DELETE /api/auth/session  // Clear session
+// Web3Auth handles session management internally
+// No API endpoints needed for session management
+const { isConnected, userInfo, disconnect } = useWeb3Auth()
 ```
 
 ### Wallet Operations
 
 ```typescript
-// Wallet operations
-const { signMessage } = useSignMessage()
-const { signTransaction } = useSignTransaction()
-const { sendTransaction } = useSendTransaction()
+// Wallet operations via Web3Auth context
+const { signMessage, sendTransaction, getBalance } = useWeb3Auth()
 ```
 
 ## Examples
@@ -367,13 +370,13 @@ function App() {
 ### Wallet Operations
 
 ```typescript
-import { useSignMessage } from '@web3auth/modal/react/solana'
+import { useWeb3Auth } from '@/hooks/useWeb3Auth'
 
 function SignMessage() {
-  const { signMessage, data: signature } = useSignMessage()
+  const { signMessage } = useWeb3Auth()
 
   const handleSign = async () => {
-    await signMessage("Hello, Solana!")
+    const signature = await signMessage("Hello, Solana!")
     console.log("Signature:", signature)
   }
 
