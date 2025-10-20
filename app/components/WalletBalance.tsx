@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { LAMPORTS_PER_SOL, PublicKey, Connection } from '@solana/web3.js'
+import { createSolanaClient } from 'gill'
 
 interface WalletBalanceProps {
   walletAddress?: string
@@ -18,10 +18,11 @@ export function WalletBalance({ walletAddress }: WalletBalanceProps) {
     try {
       setLoading(true)
       setError(null)
-      const connection = new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com')
-      const publicKey = new PublicKey(walletAddress)
-      const balance = await connection.getBalance(publicKey)
-      setBalance(balance)
+      const { rpc } = createSolanaClient({
+        urlOrMoniker: process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'devnet'
+      })
+      const balance = await (rpc.getBalance as any)({ address: walletAddress }).send()
+      setBalance(Number(balance.value))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch balance')
     } finally {
@@ -41,7 +42,7 @@ export function WalletBalance({ walletAddress }: WalletBalanceProps) {
         </h3>
         {balance !== null ? (
           <div className="text-3xl font-bold text-primary-600">
-            {(balance / LAMPORTS_PER_SOL).toFixed(4)} SOL
+            {(balance / 1e9).toFixed(4)} SOL
           </div>
         ) : (
           <div className="text-3xl font-bold text-gray-400">

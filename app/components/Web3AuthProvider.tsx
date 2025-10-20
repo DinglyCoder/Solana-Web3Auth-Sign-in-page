@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { Web3Auth } from '@web3auth/modal'
 import { SolanaWallet } from '@web3auth/solana-provider'
 import { web3AuthConfig } from '../lib/web3auth'
-import { Connection, PublicKey } from '@solana/web3.js'
+import { createSolanaClient } from 'gill'
 import { UserInfo } from '../types'
 
 interface Web3AuthContextType {
@@ -116,9 +116,11 @@ export function Web3AuthProvider({ children }: { children: ReactNode }) {
     if (!solanaWallet || !accounts || accounts.length === 0) return null
 
     try {
-      const connection = new Connection(web3AuthConfig.chainConfig.rpcTarget)
-      const balance = await connection.getBalance(new PublicKey(accounts[0]))
-      return balance / 1e9 // Convert lamports to SOL
+      const { rpc } = createSolanaClient({
+        urlOrMoniker: web3AuthConfig.chainConfig.rpcTarget || 'devnet'
+      })
+      const balance = await (rpc.getBalance as any)({ address: accounts[0] }).send()
+      return Number(balance.value) / 1e9 // Convert lamports to SOL
     } catch (err) {
       console.error('Failed to get balance:', err)
       return null
@@ -130,8 +132,13 @@ export function Web3AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const messageBuffer = Buffer.from(message, 'utf8')
-      const signature = await solanaWallet.signMessage(messageBuffer)
-      return signature.toString('base64')
+      const signature = await solanaWallet.request({
+        method: 'solana_signMessage',
+        params: {
+          message: messageBuffer,
+        },
+      })
+      return signature as string
     } catch (err) {
       console.error('Failed to sign message:', err)
       return null

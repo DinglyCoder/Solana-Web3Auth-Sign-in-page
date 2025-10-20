@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, Connection } from '@solana/web3.js'
+// Note: This component currently uses mock transactions
+// In a real implementation, you would use gill for transaction creation and signing
 
 interface SendTransactionFormProps {
   walletAddress?: string

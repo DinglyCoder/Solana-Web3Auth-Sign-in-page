@@ -61,9 +61,9 @@ export const web3AuthConfig = {
     theme: {
       primary: "#8B5CF6",
     },
-    defaultLanguage: "en",
-    loginGridCol: 3,
-    primaryButton: "externalLogin",
+    defaultLanguage: "en" as const,
+    loginGridCol: 3 as const,
+    primaryButton: "externalLogin" as const,
   },
   modalConfig: {
     displayOnExternalLinkEvent: true,
